@@ -28,7 +28,6 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
         this.repositorio = repositorio;
     }
 
-    // ── CREAR ──────────────────────────────────────────────────────────────
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ConvocatoriaResponse crear(ConvocatoriaRequest request) {
@@ -47,7 +46,6 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
         return new ConvocatoriaResponse(repositorio.save(convocatoria));
     }
 
-    // ── OBTENER POR ID ─────────────────────────────────────────────────────
     @Override
     @Transactional(readOnly = true)
     public ConvocatoriaResponse obtenerPorId(Long id) throws RecursoNoEncontradoException {
@@ -57,7 +55,6 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
         return new ConvocatoriaResponse(convocatoria);
     }
 
-    // ── LISTAR POR CONGRESO ────────────────────────────────────────────────
     @Override
     @Transactional(readOnly = true)
     public List<ConvocatoriaResponse> listarPorCongreso(Long idCongreso) {
@@ -67,7 +64,6 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
                 .collect(Collectors.toList());
     }
 
-    // ── ACTUALIZAR ─────────────────────────────────────────────────────────
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ConvocatoriaResponse actualizar(Long id, ConvocatoriaRequest request)
@@ -92,7 +88,6 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
         return new ConvocatoriaResponse(repositorio.save(convocatoria));
     }
 
-    // ── CERRAR ─────────────────────────────────────────────────────────────
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cerrar(Long id) throws RecursoNoEncontradoException {
@@ -110,7 +105,6 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
         repositorio.save(convocatoria);
     }
 
-    // ── ELIMINAR ───────────────────────────────────────────────────────────
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void eliminar(Long id) throws RecursoNoEncontradoException {
@@ -122,7 +116,6 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
         repositorio.delete(convocatoria);
     }
 
-    // ── VALIDACIÓN PRIVADA ─────────────────────────────────────────────────
     private void validarFechas(
             java.time.LocalDateTime apertura,
             java.time.LocalDateTime cierre) {

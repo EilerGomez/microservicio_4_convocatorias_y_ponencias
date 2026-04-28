@@ -2,32 +2,31 @@
 spring:
   application:
     name: ms-ponencias
-
-  # Activa el perfil según variable de entorno SPRING_PROFILES_ACTIVE
-  # Si no está definida, usa 'dev' por defecto
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
-
-  # Configuración JPA común
   jpa:
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
-
-  # Flyway — configuración común
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
 
 server:
-  port: ${SERVER_PORT:8084}
+  port: 8084
   error:
     include-message: always
     include-binding-errors: always
 
-# Logging común
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
 logging:
   level:
     root: INFO

@@ -18,42 +18,40 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 
 @RestController
 @RequestMapping("/api/v1/convocatorias")
 public class ConvocatoriaControlador {
-
     private final ConvocatoriaServicio servicio;
 
     public ConvocatoriaControlador(ConvocatoriaServicio servicio) {
         this.servicio = servicio;
     }
 
-    // POST /api/v1/convocatorias
-    @PostMapping
-    public ResponseEntity<ConvocatoriaResponse> crear(
-            @Valid @RequestBody ConvocatoriaRequest request) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(servicio.crear(request));
-    }
-
-    // GET /api/v1/convocatorias/{id}
-    @GetMapping("/{id}")
-    public ResponseEntity<ConvocatoriaResponse> obtenerPorId(
-            @PathVariable Long id) throws RecursoNoEncontradoException {
-        return ResponseEntity.ok(servicio.obtenerPorId(id));
-    }
-
-    // GET /api/v1/convocatorias/congreso/{idCongreso}
     @GetMapping("/congreso/{idCongreso}")
     public ResponseEntity<List<ConvocatoriaResponse>> listarPorCongreso(
             @PathVariable Long idCongreso) {
         return ResponseEntity.ok(servicio.listarPorCongreso(idCongreso));
     }
 
-    // PUT /api/v1/convocatorias/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<ConvocatoriaResponse> obtenerPorId(
+            @PathVariable Long id) throws RecursoNoEncontradoException {
+        return ResponseEntity.ok(servicio.obtenerPorId(id));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN_CONGRESO')")
+    public ResponseEntity<ConvocatoriaResponse> crear(
+            @Valid @RequestBody ConvocatoriaRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(servicio.crear(request));
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN_CONGRESO')")
     public ResponseEntity<ConvocatoriaResponse> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ConvocatoriaRequest request)
@@ -61,16 +59,16 @@ public class ConvocatoriaControlador {
         return ResponseEntity.ok(servicio.actualizar(id, request));
     }
 
-    // PATCH /api/v1/convocatorias/{id}/cerrar
     @PatchMapping("/{id}/cerrar")
+    @PreAuthorize("hasRole('ADMIN_CONGRESO')")
     public ResponseEntity<Void> cerrar(
             @PathVariable Long id) throws RecursoNoEncontradoException {
         servicio.cerrar(id);
         return ResponseEntity.noContent().build();
     }
 
-    // DELETE /api/v1/convocatorias/{id}
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<Void> eliminar(
             @PathVariable Long id) throws RecursoNoEncontradoException {
         servicio.eliminar(id);
