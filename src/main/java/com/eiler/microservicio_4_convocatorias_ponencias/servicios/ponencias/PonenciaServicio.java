@@ -1,0 +1,40 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
+ */
+package com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias;
+
+/**
+ *
+ * @author eiler
+ */
+
+import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaRequest;
+import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaResponse;
+import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
+import java.util.List;
+
+public interface PonenciaServicio {
+
+    PonenciaResponse enviar(PonenciaRequest request, Long idUsuario)
+            throws RecursoNoEncontradoException;
+
+    PonenciaResponse obtenerPorId(Long id)
+            throws RecursoNoEncontradoException;
+
+    List<PonenciaResponse> listarPorConvocatoria(Long idConvocatoria);
+
+    List<PonenciaResponse> listarMisPonencias(Long idUsuario);
+
+    PonenciaResponse reenviar(Long idPonencia, PonenciaRequest request, Long idUsuario)
+            throws RecursoNoEncontradoException;
+
+    // Evaluación — idEvaluador es el usuario que aprueba/rechaza
+    // TODO: Validar que idEvaluador pertenezca al comité científico del congreso
+    //       mediante llamada a ms-congresos (pendiente integración)
+    PonenciaResponse aprobar(Long idPonencia, Long idEvaluador)
+            throws RecursoNoEncontradoException;
+
+    PonenciaResponse rechazar(Long idPonencia, Long idEvaluador, String comentarios)
+            throws RecursoNoEncontradoException;
+}
