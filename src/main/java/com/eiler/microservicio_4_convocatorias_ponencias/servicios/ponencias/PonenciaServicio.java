@@ -28,5 +28,7 @@ public interface PonenciaServicio {
 
     PonenciaResponse reenviar(Long idPonencia, PonenciaRequest request, Long idUsuario)
             throws RecursoNoEncontradoException;
+    
+    List<PonenciaResponse> listarAprobadasPorCongreso(Long idCongreso);
 
 }

@@ -162,4 +162,30 @@ class PonenciaControladorTest {
         assertThrows(RecursoNoEncontradoException.class,
                 () -> controlador.reenviar(99L, req));
     }
+    
+
+    @Test
+    void listarAprobadasPorCongresoRetorna200() {
+        PonenciaResponse resAprobada = PonenciaResponse.builder()
+                .idPonencia(3L).idUsuario(42L)
+                .nombreEstado("APROBADO")
+                .tituloPonencia("Aprobada").build();
+
+        when(servicio.listarAprobadasPorCongreso(10L))
+                .thenReturn(List.of(resAprobada));
+
+        ResponseEntity<List<PonenciaResponse>> r =
+                controlador.listarAprobadasPorCongreso(10L);
+
+        assertEquals(HttpStatus.OK, r.getStatusCode());
+        assertEquals(1, r.getBody().size());
+        assertEquals("APROBADO", r.getBody().get(0).getNombreEstado());
+    }
+
+    @Test
+    void listarAprobadasPorCongresoVacioRetornaListaVacia() {
+        when(servicio.listarAprobadasPorCongreso(99L)).thenReturn(List.of());
+
+        assertTrue(controlador.listarAprobadasPorCongreso(99L).getBody().isEmpty());
+    }
 }

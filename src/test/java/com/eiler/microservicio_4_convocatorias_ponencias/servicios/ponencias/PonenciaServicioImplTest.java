@@ -14,6 +14,7 @@ import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.Ponencia
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
 import com.eiler.microservicio_4_convocatorias_ponencias.modelos.convocatoria.Convocatoria;
 import com.eiler.microservicio_4_convocatorias_ponencias.modelos.estadoPonencia.EstadoPonencia;
+import com.eiler.microservicio_4_convocatorias_ponencias.modelos.ponencias.EstadoPonenciaEnum;
 import com.eiler.microservicio_4_convocatorias_ponencias.modelos.ponencias.Ponencia;
 import com.eiler.microservicio_4_convocatorias_ponencias.repositorios.convocatoria.ConvocatoriaRepositorio;
 import com.eiler.microservicio_4_convocatorias_ponencias.repositorios.estadoponencia.EstadoPonenciaRepositorio;
@@ -210,6 +211,48 @@ class PonenciaServicioImplTest {
 
         assertThrows(IllegalStateException.class,
                 () -> servicio.reenviar(3L, requestValido, 42L));
+    }
+    
+
+    @Test
+    void listarAprobadasPorCongresoRetornaListaFiltrada()
+            throws RecursoNoEncontradoException {
+
+        EstadoPonencia estadoAprobado = EstadoPonencia.builder()
+                .idEstado(EstadoPonenciaEnum.APROBADO.getId())
+                .nombreEstado("APROBADO").build();
+
+        Ponencia ponAprobada = Ponencia.builder()
+                .idPonencia(3L).convocatoria(convAbierta)
+                .idUsuario(42L).estado(estadoAprobado)
+                .tituloPonencia("Aprobada").resumen("Resumen").build();
+
+        when(estadoRepositorio.findById(EstadoPonenciaEnum.APROBADO.getId()))
+                .thenReturn(Optional.of(estadoAprobado));
+        when(ponenciaRepositorio.findByConvocatoria_IdCongresoAndEstado(
+                10L, estadoAprobado))
+                .thenReturn(List.of(ponAprobada));
+
+        List<PonenciaResponse> resultado =
+                servicio.listarAprobadasPorCongreso(10L);
+
+        assertEquals(1, resultado.size());
+        assertEquals("APROBADO", resultado.get(0).getNombreEstado());
+    }
+
+    @Test
+    void listarAprobadasPorCongresoSinResultadosRetornaListaVacia() {
+        EstadoPonencia estadoAprobado = EstadoPonencia.builder()
+                .idEstado(EstadoPonenciaEnum.APROBADO.getId())
+                .nombreEstado("APROBADO").build();
+
+        when(estadoRepositorio.findById(EstadoPonenciaEnum.APROBADO.getId()))
+                .thenReturn(Optional.of(estadoAprobado));
+        when(ponenciaRepositorio.findByConvocatoria_IdCongresoAndEstado(
+                99L, estadoAprobado))
+                .thenReturn(List.of());
+
+        assertTrue(servicio.listarAprobadasPorCongreso(99L).isEmpty());
     }
   
 }

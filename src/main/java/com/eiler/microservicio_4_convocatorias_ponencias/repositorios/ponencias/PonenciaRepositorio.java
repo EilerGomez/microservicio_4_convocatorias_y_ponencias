@@ -9,6 +9,7 @@ package com.eiler.microservicio_4_convocatorias_ponencias.repositorios.ponencias
  * @author eiler
  */
 
+import com.eiler.microservicio_4_convocatorias_ponencias.modelos.estadoPonencia.EstadoPonencia;
 import com.eiler.microservicio_4_convocatorias_ponencias.modelos.ponencias.Ponencia;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
@@ -21,4 +22,6 @@ public interface PonenciaRepositorio extends JpaRepository<Ponencia, Long> {
 
     List<Ponencia> findByConvocatoriaIdConvocatoriaAndIdUsuario(
             Long idConvocatoria, Long idUsuario);
+    List<Ponencia> findByConvocatoria_IdCongresoAndEstado(
+            Long idCongreso, EstadoPonencia estado);
 }

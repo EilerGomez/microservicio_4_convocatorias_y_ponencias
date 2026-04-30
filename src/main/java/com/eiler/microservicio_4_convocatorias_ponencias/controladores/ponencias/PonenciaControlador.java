@@ -71,4 +71,10 @@ public class PonenciaControlador {
             throws RecursoNoEncontradoException {
         return ResponseEntity.ok(servicio.reenviar(id, request, resolverIdUsuario()));
     }
+    @GetMapping("/congreso/{idCongreso}/aprobadas")
+    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
+    public ResponseEntity<List<PonenciaResponse>> listarAprobadasPorCongreso(
+            @PathVariable Long idCongreso) {
+        return ResponseEntity.ok(servicio.listarAprobadasPorCongreso(idCongreso));
+    }
 }
