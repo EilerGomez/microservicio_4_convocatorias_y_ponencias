@@ -29,12 +29,4 @@ public interface PonenciaServicio {
     PonenciaResponse reenviar(Long idPonencia, PonenciaRequest request, Long idUsuario)
             throws RecursoNoEncontradoException;
 
-    // Evaluación — idEvaluador es el usuario que aprueba/rechaza
-    // TODO: Validar que idEvaluador pertenezca al comité científico del congreso
-    //       mediante llamada a ms-congresos (pendiente integración)
-    PonenciaResponse aprobar(Long idPonencia, Long idEvaluador)
-            throws RecursoNoEncontradoException;
-
-    PonenciaResponse rechazar(Long idPonencia, Long idEvaluador, String comentarios)
-            throws RecursoNoEncontradoException;
 }

@@ -57,8 +57,7 @@ public class PonenciaServicioImpl implements PonenciaServicio {
 
         if (tieneActiva) {
             throw new IllegalStateException(
-                    "Ya tienes una ponencia activa en esta convocatoria. " +
-                    "Solo puedes reenviar si fue rechazada.");
+                    "Ya tienes una ponencia activa en esta convocatoria. Solo puedes reenviar si fue rechazada.");
         }
 
         EstadoPonencia estadoPendiente = obtenerEstado(ESTADO_PENDIENTE);
@@ -107,8 +106,7 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     @Transactional(rollbackFor = Exception.class)
     public PonenciaResponse reenviar(Long idPonencia,
                                      PonenciaRequest request,
-                                     Long idUsuario)
-            throws RecursoNoEncontradoException {
+                                     Long idUsuario) throws RecursoNoEncontradoException {
 
         Ponencia ponencia = obtenerPonencia(idPonencia);
 
@@ -135,56 +133,6 @@ public class PonenciaServicioImpl implements PonenciaServicio {
         return new PonenciaResponse(ponenciaRepositorio.save(ponencia));
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public PonenciaResponse aprobar(Long idPonencia, Long idEvaluador)
-            throws RecursoNoEncontradoException {
-
-        // TODO: Validar que idEvaluador pertenece al comité científico del congreso
-        //       Long idCongreso = ponencia.getConvocatoria().getIdCongreso();
-        //       boolean esComite = msCongresoClient.esComiteCientifico(idCongreso, idEvaluador);
-        //       if (!esComite) throw new IllegalStateException("No perteneces al comité científico");
-
-        Ponencia ponencia = obtenerPonencia(idPonencia);
-
-        if (!ponencia.getEstado().getIdEstado().equals(ESTADO_PENDIENTE)) {
-            throw new IllegalStateException(
-                    "Solo se pueden aprobar ponencias en estado PENDIENTE");
-        }
-
-        EstadoPonencia estadoAprobado = obtenerEstado(ESTADO_APROBADO);
-        ponencia.setEstado(estadoAprobado);
-
-        return new PonenciaResponse(ponenciaRepositorio.save(ponencia));
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public PonenciaResponse rechazar(Long idPonencia, Long idEvaluador, String comentarios)
-            throws RecursoNoEncontradoException {
-
-        // TODO: Validar que idEvaluador pertenece al comité científico del congreso
-        //       Long idCongreso = ponencia.getConvocatoria().getIdCongreso();
-        //       boolean esComite = msCongresoClient.esComiteCientifico(idCongreso, idEvaluador);
-        //       if (!esComite) throw new IllegalStateException("No perteneces al comité científico");
-
-        if (comentarios == null || comentarios.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Los comentarios son obligatorios al rechazar una ponencia");
-        }
-
-        Ponencia ponencia = obtenerPonencia(idPonencia);
-
-        if (!ponencia.getEstado().getIdEstado().equals(ESTADO_PENDIENTE)) {
-            throw new IllegalStateException(
-                    "Solo se pueden rechazar ponencias en estado PENDIENTE");
-        }
-
-        EstadoPonencia estadoRechazado = obtenerEstado(ESTADO_RECHAZADO);
-        ponencia.setEstado(estadoRechazado);
-
-        return new PonenciaResponse(ponenciaRepositorio.save(ponencia));
-    }
 
     private Ponencia obtenerPonencia(Long id) throws RecursoNoEncontradoException {
         return ponenciaRepositorio.findById(id)
@@ -192,8 +140,7 @@ public class PonenciaServicioImpl implements PonenciaServicio {
                         "Ponencia con ID " + id + " no encontrada"));
     }
 
-    private Convocatoria obtenerConvocatoriaAbierta(Long idConvocatoria)
-            throws RecursoNoEncontradoException {
+    private Convocatoria obtenerConvocatoriaAbierta(Long idConvocatoria)throws RecursoNoEncontradoException {
         Convocatoria conv = convocatoriaRepositorio.findById(idConvocatoria)
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Convocatoria con ID " + idConvocatoria + " no encontrada"));

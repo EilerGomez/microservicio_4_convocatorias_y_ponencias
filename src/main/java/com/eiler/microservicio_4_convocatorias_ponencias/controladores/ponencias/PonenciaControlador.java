@@ -72,28 +72,4 @@ public class PonenciaControlador {
         return ResponseEntity.ok(servicio.reenviar(id, request, idUsuario));
     }
 
-    // PATCH — aprobar ponencia
-    // X-User-Id es el evaluador
-    // TODO: cuando se integre ms-congresos, validar que X-User-Id sea comité científico
-    @PatchMapping("/{id}/aprobar")
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
-    public ResponseEntity<PonenciaResponse> aprobar(
-            @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long idEvaluador)
-            throws RecursoNoEncontradoException {
-        return ResponseEntity.ok(servicio.aprobar(id, idEvaluador));
-    }
-
-    // PATCH — rechazar ponencia con comentarios
-    // X-User-Id es el evaluador
-    // TODO: cuando se integre ms-congresos, validar que X-User-Id sea comité científico
-    @PatchMapping("/{id}/rechazar")
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
-    public ResponseEntity<PonenciaResponse> rechazar(
-            @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long idEvaluador,
-            @RequestParam String comentarios)
-            throws RecursoNoEncontradoException {
-        return ResponseEntity.ok(servicio.rechazar(id, idEvaluador, comentarios));
-    }
 }
