@@ -2,6 +2,7 @@ package com.eiler.microservicio_4_convocatorias_ponencias.seguridad;
 
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.convocatoria.ConvocatoriaServicio;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.estadoPonencia.EstadoPonenciaServicio;
+import com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias.PonenciaServicio;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -10,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,8 +27,10 @@ class ConfiguracionSeguridadTest {
 
     @MockitoBean
     private EstadoPonenciaServicio estadoPonenciaServicio;
-
-
+    
+    @MockitoBean
+    private PonenciaServicio ponenciaServicio;
+    
     @Test
     void rutaProtegida_sinHeaders_retorna401() throws Exception {
         mockMvc.perform(get("/api/v1/convocatorias/1"))
