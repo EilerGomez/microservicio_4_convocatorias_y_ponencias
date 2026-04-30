@@ -8,7 +8,6 @@ package com.eiler.microservicio_4_convocatorias_ponencias.servicios.evaluacionPo
  *
  * @author eiler
  */
-// src/test/java/.../servicios/evaluacionPonencia/EvaluacionPonenciaServicioImplTest.java
 
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaRequest;
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaResponse;
@@ -93,12 +92,9 @@ class EvaluacionPonenciaServicioImplTest {
                 .comentarios("No cumple los requisitos").build();
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // EVALUAR — APROBAR
-    // ══════════════════════════════════════════════════════════════════════
 
     @Test
-    void evaluar_aprobar_creaEvaluacionYCambiaEstado() throws RecursoNoEncontradoException {
+    void evaluarAprobarCreaEvaluacionYCambiaEstado() throws RecursoNoEncontradoException {
         when(ponenciaRepositorio.findById(1L)).thenReturn(Optional.of(ponenciaPendiente));
         when(estadoRepositorio.findById(2L)).thenReturn(Optional.of(aprobado));
         when(ponenciaRepositorio.save(any())).thenReturn(ponenciaPendiente);
@@ -108,13 +104,13 @@ class EvaluacionPonenciaServicioImplTest {
 
         assertNotNull(r);
         assertTrue(r.getEstaAprobado());
-        assertEquals("APROBADO", r.getEstadoPonencia());
+        assertEquals("APROBADO", r.getEstadoPonencia().toString());
         verify(ponenciaRepositorio).save(any());
         verify(evaluacionRepositorio).save(any());
     }
 
     @Test
-    void evaluar_aprobar_sinComentarios_esValido() throws RecursoNoEncontradoException {
+    void evaluarAprobarSinComentariosEsValido() throws RecursoNoEncontradoException {
         requestAprobar.setComentarios(null);
         when(ponenciaRepositorio.findById(1L)).thenReturn(Optional.of(ponenciaPendiente));
         when(estadoRepositorio.findById(2L)).thenReturn(Optional.of(aprobado));
@@ -124,12 +120,8 @@ class EvaluacionPonenciaServicioImplTest {
         assertNotNull(servicio.evaluar(requestAprobar, 10L));
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // EVALUAR — RECHAZAR
-    // ══════════════════════════════════════════════════════════════════════
-
     @Test
-    void evaluar_rechazar_conComentarios_creaEvaluacion() throws RecursoNoEncontradoException {
+    void evaluarRechazarConComentariosCreaEvaluacion() throws RecursoNoEncontradoException {
         when(ponenciaRepositorio.findById(1L)).thenReturn(Optional.of(ponenciaPendiente));
         when(estadoRepositorio.findById(3L)).thenReturn(Optional.of(rechazado));
         when(ponenciaRepositorio.save(any())).thenReturn(ponenciaPendiente);
@@ -139,13 +131,13 @@ class EvaluacionPonenciaServicioImplTest {
 
         assertNotNull(r);
         assertFalse(r.getEstaAprobado());
-        assertEquals("RECHAZADO", r.getEstadoPonencia());
+        assertEquals("RECHAZADO", r.getEstadoPonencia().toString());
         verify(ponenciaRepositorio).save(any());
         verify(evaluacionRepositorio).save(any());
     }
 
     @Test
-    void evaluar_rechazar_sinComentarios_lanzaIllegalArgument() {
+    void evaluarRechazarSinComentariosLanzaIllegalArgument() {
         requestRechazar.setComentarios(null);
         when(ponenciaRepositorio.findById(1L)).thenReturn(Optional.of(ponenciaPendiente));
 
@@ -156,7 +148,7 @@ class EvaluacionPonenciaServicioImplTest {
     }
 
     @Test
-    void evaluar_rechazar_comentariosVacios_lanzaIllegalArgument() {
+    void evaluarRechazarComentariosVaciosLanzaIllegalArgument() {
         requestRechazar.setComentarios("   ");
         when(ponenciaRepositorio.findById(1L)).thenReturn(Optional.of(ponenciaPendiente));
 
@@ -164,12 +156,9 @@ class EvaluacionPonenciaServicioImplTest {
                 () -> servicio.evaluar(requestRechazar, 10L));
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // EVALUAR — VALIDACIONES GENERALES
-    // ══════════════════════════════════════════════════════════════════════
 
     @Test
-    void evaluar_ponenciaNoExiste_lanzaExcepcion() {
+    void evaluarPonenciaNoExisteLanzaExcepcion() {
         when(ponenciaRepositorio.findById(99L)).thenReturn(Optional.empty());
         requestAprobar.setIdPonencia(99L);
 
@@ -179,7 +168,7 @@ class EvaluacionPonenciaServicioImplTest {
     }
 
     @Test
-    void evaluar_ponenciaNoEsPendiente_lanzaIllegalState() {
+    void evaluarPonenciaNoEsPendienteLanzaIllegalState() {
         when(ponenciaRepositorio.findById(2L)).thenReturn(Optional.of(ponenciaAprobada));
         requestAprobar.setIdPonencia(2L);
 
@@ -189,5 +178,46 @@ class EvaluacionPonenciaServicioImplTest {
         verify(evaluacionRepositorio, never()).save(any());
     }
 
-    
+    // TODO: cuando se integre ms-congresos agregar:
+    // @Test
+    // void evaluar_evaluadorNoEsComite_lanzaIllegalState() {
+    //     // mockear msCongresoClient.esComiteCientifico() retornando false
+    //     // assertThrows(IllegalStateException.class, () -> servicio.evaluar(...))
+    //     // assertTrue(ex.getMessage().contains("comité científico"))
+    // }
+
+
+    @Test
+    void obtenerPorIdExisteRetorna() throws RecursoNoEncontradoException {
+        when(evaluacionRepositorio.findById(1L)).thenReturn(Optional.of(evaluacionAprobada));
+        assertEquals(1L, servicio.obtenerPorId(1L).getIdEvaluacion());
+    }
+
+    @Test
+    void obtenerPorIdNoExisteLanzaExcepcion() {
+        when(evaluacionRepositorio.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> servicio.obtenerPorId(99L));
+    }
+
+
+    @Test
+    void listarPorPonenciaRetornaLista() {
+        when(evaluacionRepositorio.findByPonencia_IdPonencia(1L))
+                .thenReturn(List.of(evaluacionAprobada));
+        assertEquals(1, servicio.listarPorPonencia(1L).size());
+    }
+
+    @Test
+    void listarPorPonenciaVaciaRetornaListaVacia() {
+        when(evaluacionRepositorio.findByPonencia_IdPonencia(99L)).thenReturn(List.of());
+        assertTrue(servicio.listarPorPonencia(99L).isEmpty());
+    }
+
+    @Test
+    void listarPorEvaluadorRetornaLista() {
+        when(evaluacionRepositorio.findByIdEvaluador(10L))
+                .thenReturn(List.of(evaluacionAprobada, evaluacionRechazada));
+        assertEquals(2, servicio.listarPorEvaluador(10L).size());
+    }
 }

@@ -8,7 +8,6 @@ package com.eiler.microservicio_4_convocatorias_ponencias.servicios.evaluacionPo
  *
  * @author eiler
  */
-// servicios/evaluacionPonencia/EvaluacionPonenciaServicioImpl.java
 
 
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaRequest;
@@ -99,17 +98,30 @@ public class EvaluacionPonenciaServicioImpl implements EvaluacionPonenciaServici
     }
 
     @Override
-    public EvaluacionPonenciaResponse obtenerPorId(Long id) throws RecursoNoEncontradoException {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    @Transactional(readOnly = true)
+    public EvaluacionPonenciaResponse obtenerPorId(Long id)
+            throws RecursoNoEncontradoException {
+        return evaluacionRepositorio.findById(id)
+                .map(EvaluacionPonenciaResponse::new)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Evaluación con ID " + id + " no encontrada"));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EvaluacionPonenciaResponse> listarPorPonencia(Long idPonencia) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return evaluacionRepositorio.findByPonencia_IdPonencia(idPonencia)
+                .stream()
+                .map(EvaluacionPonenciaResponse::new)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EvaluacionPonenciaResponse> listarPorEvaluador(Long idEvaluador) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return evaluacionRepositorio.findByIdEvaluador(idEvaluador)
+                .stream()
+                .map(EvaluacionPonenciaResponse::new)
+                .collect(Collectors.toList());
     }
 }

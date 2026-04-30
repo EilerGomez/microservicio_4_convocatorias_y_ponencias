@@ -32,9 +32,6 @@ public class EvaluacionPonenciaControlador {
         this.servicio = servicio;
     }
 
-    // POST — evalúa una ponencia (aprueba o rechaza)
-    // X-User-Id es el evaluador
-    // TODO: validar que X-User-Id sea miembro del comité científico (pendiente ms-congresos)
     @PostMapping
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<EvaluacionPonenciaResponse> evaluar(
@@ -45,7 +42,6 @@ public class EvaluacionPonenciaControlador {
                 .body(servicio.evaluar(request, idEvaluador));
     }
 
-    // GET — obtener evaluación por id
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<EvaluacionPonenciaResponse> obtenerPorId(
@@ -53,7 +49,6 @@ public class EvaluacionPonenciaControlador {
         return ResponseEntity.ok(servicio.obtenerPorId(id));
     }
 
-    // GET — listar evaluaciones de una ponencia
     @GetMapping("/ponencia/{idPonencia}")
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<EvaluacionPonenciaResponse>> listarPorPonencia(
@@ -61,7 +56,6 @@ public class EvaluacionPonenciaControlador {
         return ResponseEntity.ok(servicio.listarPorPonencia(idPonencia));
     }
 
-    // GET — listar evaluaciones hechas por el evaluador logueado
     @GetMapping("/mis-evaluaciones")
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<EvaluacionPonenciaResponse>> listarMisEvaluaciones(

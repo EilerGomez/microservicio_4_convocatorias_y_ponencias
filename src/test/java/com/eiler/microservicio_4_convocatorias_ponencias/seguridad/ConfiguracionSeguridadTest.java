@@ -2,6 +2,7 @@ package com.eiler.microservicio_4_convocatorias_ponencias.seguridad;
 
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.convocatoria.ConvocatoriaServicio;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.estadoPonencia.EstadoPonenciaServicio;
+import com.eiler.microservicio_4_convocatorias_ponencias.servicios.evaluacionPonencia.EvaluacionPonenciaServicio;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias.PonenciaServicio;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,10 @@ class ConfiguracionSeguridadTest {
     
     @MockitoBean
     private PonenciaServicio ponenciaServicio;
+    
+    @MockitoBean
+    private EvaluacionPonenciaServicio evaluacionPonenciaServicio;
+    
     
     @Test
     void rutaProtegida_sinHeaders_retorna401() throws Exception {
