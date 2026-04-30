@@ -157,7 +157,7 @@ class PonenciaServicioImplTest {
 
     @Test
     void listarPorConvocatoriaRetornaLista() {
-        when(ponenciaRepositorio.findByConvocatoriaIIdConvocatoria(1L))
+        when(ponenciaRepositorio.findByConvocatoriaIdConvocatoria(1L))
                 .thenReturn(List.of(ponPendiente, ponRechazada));
         assertEquals(2, servicio.listarPorConvocatoria(1L).size());
     }

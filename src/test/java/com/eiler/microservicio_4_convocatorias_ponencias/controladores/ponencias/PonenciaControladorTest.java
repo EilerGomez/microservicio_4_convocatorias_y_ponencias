@@ -8,11 +8,11 @@ package com.eiler.microservicio_4_convocatorias_ponencias.controladores.ponencia
  *
  * @author eiler
  */
-
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaRequest;
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias.PonenciaServicio;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,11 +21,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,10 +40,16 @@ class PonenciaControladorTest {
 
     private PonenciaRequest  req;
     private PonenciaResponse resPendiente;
-    private PonenciaResponse resAprobado;
 
     @BeforeEach
     void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "42", null,
+                        List.of(new SimpleGrantedAuthority("ROLE_PARTICIPANTE"))
+                )
+        );
+
         req = PonenciaRequest.builder()
                 .idConvocatoria(1L).idTipoActividad(1)
                 .tituloPonencia("Mi ponencia").resumen("Resumen").build();
@@ -47,33 +57,40 @@ class PonenciaControladorTest {
         resPendiente = PonenciaResponse.builder()
                 .idPonencia(1L).idConvocatoria(1L).idUsuario(42L)
                 .nombreEstado("PENDIENTE").tituloPonencia("Mi ponencia").build();
+    }
 
-        resAprobado = PonenciaResponse.builder()
-                .idPonencia(1L).idConvocatoria(1L).idUsuario(42L)
-                .nombreEstado("APROBADO").tituloPonencia("Mi ponencia").build();
+    @AfterEach
+    void limpiarContexto() {
+        SecurityContextHolder.clearContext();
     }
 
 
     @Test
     void enviarRetorna201() throws RecursoNoEncontradoException {
         when(servicio.enviar(any(), eq(42L))).thenReturn(resPendiente);
-        ResponseEntity<PonenciaResponse> r = controlador.enviar(req, 42L);
+
+        ResponseEntity<PonenciaResponse> r = controlador.enviar(req);
+
         assertEquals(HttpStatus.CREATED, r.getStatusCode());
         assertEquals("PENDIENTE", r.getBody().getNombreEstado());
+        verify(servicio).enviar(any(), eq(42L));
     }
 
     @Test
     void enviarConvCerradaPropagaExcepcion() throws RecursoNoEncontradoException {
         when(servicio.enviar(any(), eq(42L)))
                 .thenThrow(new IllegalStateException("cerrada"));
-        assertThrows(IllegalStateException.class, () -> controlador.enviar(req, 42L));
+
+        assertThrows(IllegalStateException.class, () -> controlador.enviar(req));
     }
 
 
     @Test
-    void obtenerPorIdExiste_retorna200() throws RecursoNoEncontradoException {
+    void obtenerPorIdExisteRetorna200() throws RecursoNoEncontradoException {
         when(servicio.obtenerPorId(1L)).thenReturn(resPendiente);
+
         ResponseEntity<PonenciaResponse> r = controlador.obtenerPorId(1L);
+
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertEquals(1L, r.getBody().getIdPonencia());
     }
@@ -82,6 +99,7 @@ class PonenciaControladorTest {
     void obtenerPorIdNoExisteLanzaExcepcion() throws RecursoNoEncontradoException {
         when(servicio.obtenerPorId(99L))
                 .thenThrow(new RecursoNoEncontradoException("99"));
+
         assertThrows(RecursoNoEncontradoException.class,
                 () -> controlador.obtenerPorId(99L));
     }
@@ -90,7 +108,10 @@ class PonenciaControladorTest {
     @Test
     void listarPorConvocatoriaRetorna200() {
         when(servicio.listarPorConvocatoria(1L)).thenReturn(List.of(resPendiente));
-        ResponseEntity<List<PonenciaResponse>> r = controlador.listarPorConvocatoria(1L);
+
+        ResponseEntity<List<PonenciaResponse>> r =
+                controlador.listarPorConvocatoria(1L);
+
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertEquals(1, r.getBody().size());
     }
@@ -98,13 +119,17 @@ class PonenciaControladorTest {
     @Test
     void listarPorConvocatoriaVaciaRetornaListaVacia() {
         when(servicio.listarPorConvocatoria(99L)).thenReturn(List.of());
+
         assertTrue(controlador.listarPorConvocatoria(99L).getBody().isEmpty());
     }
+
 
     @Test
     void listarMisPonenciasRetorna200() {
         when(servicio.listarMisPonencias(42L)).thenReturn(List.of(resPendiente));
-        ResponseEntity<List<PonenciaResponse>> r = controlador.listarMisPonencias(42L);
+
+        ResponseEntity<List<PonenciaResponse>> r = controlador.listarMisPonencias();
+
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertEquals(42L, r.getBody().get(0).getIdUsuario());
     }
@@ -113,16 +138,28 @@ class PonenciaControladorTest {
     @Test
     void reenviarExitosoRetorna200() throws RecursoNoEncontradoException {
         when(servicio.reenviar(eq(2L), any(), eq(42L))).thenReturn(resPendiente);
-        ResponseEntity<PonenciaResponse> r = controlador.reenviar(2L, req, 42L);
+
+        ResponseEntity<PonenciaResponse> r = controlador.reenviar(2L, req);
+
         assertEquals(HttpStatus.OK, r.getStatusCode());
+        verify(servicio).reenviar(eq(2L), any(), eq(42L));
     }
 
     @Test
     void reenviarNoRechazadaPropagaExcepcion() throws RecursoNoEncontradoException {
         when(servicio.reenviar(eq(1L), any(), eq(42L)))
                 .thenThrow(new IllegalStateException("rechazada"));
+
         assertThrows(IllegalStateException.class,
-                () -> controlador.reenviar(1L, req, 42L));
+                () -> controlador.reenviar(1L, req));
     }
 
+    @Test
+    void reenviarNoExisteLanzaExcepcion() throws RecursoNoEncontradoException {
+        when(servicio.reenviar(eq(99L), any(), eq(42L)))
+                .thenThrow(new RecursoNoEncontradoException("99"));
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> controlador.reenviar(99L, req));
+    }
 }

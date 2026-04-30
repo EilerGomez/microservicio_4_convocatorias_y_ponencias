@@ -13,7 +13,8 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-
+jwt:
+  secret: ${JWT_SECRET:VGhpc0lzQVN1cGVyU2VjdXJlSldUU2VjcmV0S2V5Rm9yRGV2TXVzdEJlQXRMZWFzdDMyQ2hhcnM=}
 server:
   port: 8084
   error:

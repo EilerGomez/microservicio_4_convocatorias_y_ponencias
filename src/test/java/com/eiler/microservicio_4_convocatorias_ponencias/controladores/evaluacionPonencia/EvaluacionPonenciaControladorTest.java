@@ -8,12 +8,11 @@ package com.eiler.microservicio_4_convocatorias_ponencias.controladores.evaluaci
  *
  * @author eiler
  */
-
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaRequest;
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
-import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaResponse.EstadoPonencia;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.evaluacionPonencia.EvaluacionPonenciaServicio;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +21,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -40,10 +42,17 @@ class EvaluacionPonenciaControladorTest {
     private EvaluacionPonenciaRequest  requestRechazar;
     private EvaluacionPonenciaResponse resAprobada;
     private EvaluacionPonenciaResponse resRechazada;
+    private EvaluacionPonenciaResponse.EstadoPonencia estadoPonencia;
 
-    EstadoPonencia estadoPonencia;
     @BeforeEach
     void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "10", null,
+                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN_CONGRESO"))
+                )
+        );
+
         requestAprobar = EvaluacionPonenciaRequest.builder()
                 .idPonencia(1L).estaAprobado(true)
                 .comentarios("Aprobada").build();
@@ -63,13 +72,18 @@ class EvaluacionPonenciaControladorTest {
                 .estadoPonencia(estadoPonencia.RECHAZADO).build();
     }
 
-    
+    @AfterEach
+    void limpiarContexto() {
+        SecurityContextHolder.clearContext();
+    }
+
+
     @Test
-    void evaluar_aprobar_retorna201() throws RecursoNoEncontradoException {
+    void evaluarAprobarRetorna201() throws RecursoNoEncontradoException {
         when(servicio.evaluar(any(), eq(10L))).thenReturn(resAprobada);
 
         ResponseEntity<EvaluacionPonenciaResponse> r =
-                controlador.evaluar(requestAprobar, 10L);
+                controlador.evaluar(requestAprobar);
 
         assertEquals(HttpStatus.CREATED, r.getStatusCode());
         assertTrue(r.getBody().getEstaAprobado());
@@ -78,11 +92,11 @@ class EvaluacionPonenciaControladorTest {
     }
 
     @Test
-    void evaluar_rechazar_retorna201() throws RecursoNoEncontradoException {
+    void evaluarRechazarRetorna201() throws RecursoNoEncontradoException {
         when(servicio.evaluar(any(), eq(10L))).thenReturn(resRechazada);
 
         ResponseEntity<EvaluacionPonenciaResponse> r =
-                controlador.evaluar(requestRechazar, 10L);
+                controlador.evaluar(requestRechazar);
 
         assertEquals(HttpStatus.CREATED, r.getStatusCode());
         assertFalse(r.getBody().getEstaAprobado());
@@ -90,39 +104,40 @@ class EvaluacionPonenciaControladorTest {
     }
 
     @Test
-    void evaluar_ponenciaNoExiste_lanzaExcepcion() throws RecursoNoEncontradoException {
+    void evaluarPonenciaNoExisteLanzaExcepcion() throws RecursoNoEncontradoException {
         when(servicio.evaluar(any(), eq(10L)))
-                .thenThrow(new RecursoNoEncontradoException("Ponencia 99 no encontrada"));
+                .thenThrow(new RecursoNoEncontradoException("99"));
 
         assertThrows(RecursoNoEncontradoException.class,
-                () -> controlador.evaluar(requestAprobar, 10L));
+                () -> controlador.evaluar(requestAprobar));
     }
 
     @Test
-    void evaluar_noPendiente_lanzaIllegalState() throws RecursoNoEncontradoException {
+    void evaluarNoPendientePropagaExcepcion() throws RecursoNoEncontradoException {
         when(servicio.evaluar(any(), eq(10L)))
                 .thenThrow(new IllegalStateException("PENDIENTE"));
 
         assertThrows(IllegalStateException.class,
-                () -> controlador.evaluar(requestAprobar, 10L));
+                () -> controlador.evaluar(requestAprobar));
     }
 
     @Test
-    void evaluar_rechazarSinComentarios_lanzaIllegalArgument()
+    void evaluarRechazarSinComentariosPropagaExcepcion()
             throws RecursoNoEncontradoException {
         when(servicio.evaluar(any(), eq(10L)))
                 .thenThrow(new IllegalArgumentException("comentarios"));
 
         assertThrows(IllegalArgumentException.class,
-                () -> controlador.evaluar(requestRechazar, 10L));
+                () -> controlador.evaluar(requestRechazar));
     }
 
     // TODO: cuando se integre ms-congresos agregar:
     // @Test
-    // void evaluar_evaluadorNoEsComite_retorna403() { ... }
+    // void evaluarEvaluadorNoEsComiteRetorna403() { ... }
+
 
     @Test
-    void obtenerPorId_existe_retorna200() throws RecursoNoEncontradoException {
+    void obtenerPorIdExisteRetorna200() throws RecursoNoEncontradoException {
         when(servicio.obtenerPorId(1L)).thenReturn(resAprobada);
 
         ResponseEntity<EvaluacionPonenciaResponse> r = controlador.obtenerPorId(1L);
@@ -132,7 +147,7 @@ class EvaluacionPonenciaControladorTest {
     }
 
     @Test
-    void obtenerPorId_noExiste_lanzaExcepcion() throws RecursoNoEncontradoException {
+    void obtenerPorIdNoExisteLanzaExcepcion() throws RecursoNoEncontradoException {
         when(servicio.obtenerPorId(99L))
                 .thenThrow(new RecursoNoEncontradoException("99"));
 
@@ -142,7 +157,7 @@ class EvaluacionPonenciaControladorTest {
 
 
     @Test
-    void listarPorPonencia_retorna200() {
+    void listarPorPonenciaRetorna200() {
         when(servicio.listarPorPonencia(1L)).thenReturn(List.of(resAprobada));
 
         ResponseEntity<List<EvaluacionPonenciaResponse>> r =
@@ -153,18 +168,19 @@ class EvaluacionPonenciaControladorTest {
     }
 
     @Test
-    void listarPorPonencia_vacia_retornaListaVacia() {
+    void listarPorPonenciaVaciaRetornaListaVacia() {
         when(servicio.listarPorPonencia(99L)).thenReturn(List.of());
+
         assertTrue(controlador.listarPorPonencia(99L).getBody().isEmpty());
     }
 
     @Test
-    void listarMisEvaluaciones_retorna200() {
+    void listarMisEvaluacionesRetorna200() {
         when(servicio.listarPorEvaluador(10L))
                 .thenReturn(List.of(resAprobada, resRechazada));
 
         ResponseEntity<List<EvaluacionPonenciaResponse>> r =
-                controlador.listarMisEvaluaciones(10L);
+                controlador.listarMisEvaluaciones();
 
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertEquals(2, r.getBody().size());

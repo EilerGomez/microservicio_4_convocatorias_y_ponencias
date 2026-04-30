@@ -17,7 +17,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -30,24 +32,26 @@ public class PonenciaControlador {
         this.servicio = servicio;
     }
 
-    // cualquier usuario autenticado envía su ponencia
-    @PostMapping
-    public ResponseEntity<PonenciaResponse> enviar(
-            @Valid @RequestBody PonenciaRequest request,
-            @RequestHeader("X-User-Id") Long idUsuario)
-            throws RecursoNoEncontradoException {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(servicio.enviar(request, idUsuario));
+    private Long resolverIdUsuario() {
+        String principal = (String) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        return Long.parseLong(principal);
     }
 
-    //cualquier autenticado puede ver una ponencia
+    @PostMapping
+    public ResponseEntity<PonenciaResponse> enviar(
+            @Valid @RequestBody PonenciaRequest request)
+            throws RecursoNoEncontradoException {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(servicio.enviar(request, resolverIdUsuario()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PonenciaResponse> obtenerPorId(
             @PathVariable Long id) throws RecursoNoEncontradoException {
         return ResponseEntity.ok(servicio.obtenerPorId(id));
     }
 
-    //admin congreso o sistema lista por convocatoria
     @GetMapping("/convocatoria/{idConvocatoria}")
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<PonenciaResponse>> listarPorConvocatoria(
@@ -55,21 +59,16 @@ public class PonenciaControlador {
         return ResponseEntity.ok(servicio.listarPorConvocatoria(idConvocatoria));
     }
 
-    //cada usuario ve sus propias ponencias
     @GetMapping("/mis-ponencias")
-    public ResponseEntity<List<PonenciaResponse>> listarMisPonencias(
-            @RequestHeader("X-User-Id") Long idUsuario) {
-        return ResponseEntity.ok(servicio.listarMisPonencias(idUsuario));
+    public ResponseEntity<List<PonenciaResponse>> listarMisPonencias() {
+        return ResponseEntity.ok(servicio.listarMisPonencias(resolverIdUsuario()));
     }
 
-    //reenviar ponencia rechazada
     @PutMapping("/{id}/reenviar")
     public ResponseEntity<PonenciaResponse> reenviar(
             @PathVariable Long id,
-            @Valid @RequestBody PonenciaRequest request,
-            @RequestHeader("X-User-Id") Long idUsuario)
+            @Valid @RequestBody PonenciaRequest request)
             throws RecursoNoEncontradoException {
-        return ResponseEntity.ok(servicio.reenviar(id, request, idUsuario));
+        return ResponseEntity.ok(servicio.reenviar(id, request, resolverIdUsuario()));
     }
-
 }

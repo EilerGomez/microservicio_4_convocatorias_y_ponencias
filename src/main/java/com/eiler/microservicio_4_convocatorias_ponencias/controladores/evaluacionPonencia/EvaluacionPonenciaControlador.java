@@ -8,9 +8,6 @@ package com.eiler.microservicio_4_convocatorias_ponencias.controladores.evaluaci
  *
  * @author eiler
  */
-
-
-
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaRequest;
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.evaluacionPonencia.EvaluacionPonenciaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
@@ -19,7 +16,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -32,14 +31,19 @@ public class EvaluacionPonenciaControlador {
         this.servicio = servicio;
     }
 
+    private Long resolverIdUsuario() {
+        String principal = (String) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        return Long.parseLong(principal);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<EvaluacionPonenciaResponse> evaluar(
-            @Valid @RequestBody EvaluacionPonenciaRequest request,
-            @RequestHeader("X-User-Id") Long idEvaluador)
+            @Valid @RequestBody EvaluacionPonenciaRequest request)
             throws RecursoNoEncontradoException {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(servicio.evaluar(request, idEvaluador));
+                .body(servicio.evaluar(request, resolverIdUsuario()));
     }
 
     @GetMapping("/{id}")
@@ -58,8 +62,7 @@ public class EvaluacionPonenciaControlador {
 
     @GetMapping("/mis-evaluaciones")
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
-    public ResponseEntity<List<EvaluacionPonenciaResponse>> listarMisEvaluaciones(
-            @RequestHeader("X-User-Id") Long idEvaluador) {
-        return ResponseEntity.ok(servicio.listarPorEvaluador(idEvaluador));
+    public ResponseEntity<List<EvaluacionPonenciaResponse>> listarMisEvaluaciones() {
+        return ResponseEntity.ok(servicio.listarPorEvaluador(resolverIdUsuario()));
     }
 }

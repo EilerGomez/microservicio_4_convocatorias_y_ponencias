@@ -46,7 +46,8 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     @Transactional(rollbackFor = Exception.class)
     public PonenciaResponse enviar(PonenciaRequest request, Long idUsuario)
             throws RecursoNoEncontradoException {
-
+        System.out.println(request);
+        System.out.println(idUsuario);
         Convocatoria convocatoria = obtenerConvocatoriaAbierta(request.getIdConvocatoria());
 
         boolean tieneActiva = ponenciaRepositorio
@@ -87,7 +88,7 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     @Override
     @Transactional(readOnly = true)
     public List<PonenciaResponse> listarPorConvocatoria(Long idConvocatoria) {
-        return ponenciaRepositorio.findByConvocatoriaIIdConvocatoria(idConvocatoria)
+        return ponenciaRepositorio.findByConvocatoriaIdConvocatoria(idConvocatoria)
                 .stream()
                 .map(PonenciaResponse::new)
                 .collect(Collectors.toList());

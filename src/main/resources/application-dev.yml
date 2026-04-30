@@ -32,3 +32,5 @@ logging:
   level:
     com.tugrupo.msponencias: DEBUG    # más detalle en DEV
     org.flywaydb: DEBUG
+jwt:
+  secret: ${JWT_SECRET:VGhpc0lzQVN1cGVyU2VjdXJlSldUU2VjcmV0S2V5Rm9yRGV2TXVzdEJlQXRMZWFzdDMyQ2hhcnM=}

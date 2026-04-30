@@ -15,7 +15,7 @@ import java.util.List;
 
 public interface PonenciaRepositorio extends JpaRepository<Ponencia, Long> {
 
-    List<Ponencia> findByConvocatoriaIIdConvocatoria(Long idConvocatoria);
+    List<Ponencia> findByConvocatoriaIdConvocatoria(Long idConvocatoria);
 
     List<Ponencia> findByIdUsuario(Long idUsuario);
 
