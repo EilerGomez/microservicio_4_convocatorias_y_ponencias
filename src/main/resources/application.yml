@@ -43,7 +43,7 @@ eureka:
     prefer-ip-address: true
   client:
     service-url:
-      defaultZone: https://eureka-service-a6b0enhtggeqgwd7.mexicocentral-01.azurewebsites.net/eureka/
+      defaultZone: https://eureka-service-a6b0enhtggeqgwd7.eastus2-01.azurewebsites.net/eureka/
     register-with-eureka: true
     fetch-registry: true
 
