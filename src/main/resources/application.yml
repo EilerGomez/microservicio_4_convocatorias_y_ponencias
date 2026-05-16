@@ -1,0 +1,58 @@
+# application.yml
+spring:
+  application:
+    name: ms-ponencias          # nombre con el que aparece en Eureka
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+jwt:
+  secret: ${JWT_SECRET:VGhpc0lzQVN1cGVyU2VjdXJlSldUU2VjcmV0S2V5Rm9yRGV2TXVzdEJlQXRMZWFzdDMyQ2hhcnM=}
+
+server:
+  port: 8084
+  error:
+    include-message: always
+    include-binding-errors: always
+  # Necesario para que Eureka registre la IP correcta detrás de proxy/Azure
+  forward-headers-strategy: framework
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+
+# ── Eureka Client ──────────────────────────────────────────────────────
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${random.uuid}
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: https://eureka-service-a6b0enhtggeqgwd7.mexicocentral-01.azurewebsites.net/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+# ── Actuator (Eureka usa /actuator/health para health checks) ──────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
