@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  db-ponencias:
+    image: mysql:8.0
+    container_name: ms-ponencias-db
+    environment:
+      MYSQL_DATABASE: db_ponencias
+      MYSQL_USER: ms_ponencias
+      MYSQL_PASSWORD: "1324"
+      MYSQL_ROOT_PASSWORD: "1324"
+    ports:
+      - "5458:5458"
+    command: ["--port=5458", "--default-authentication-plugin=mysql_native_password"]
+    volumes:
+      - mysqldata_ponencias:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -P 5458 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-net
+
+  ms-ponencias:
+    build: .
+    container_name: ms-ponencias
+    ports:
+      - "8085:8085"
+    environment:
+      - SERVER_PORT=8085
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_HOST=db-ponencias
+      - DB_PORT=5458
+      - DB_NAME=db_ponencias
+      - DB_USERNAME=ms_ponencias
+      - DB_PASSWORD=1324
+      - JWT_SECRET=${JWT_SECRET:-VGhpc0lzQVN1cGVyU2VjdXJlSldUU2VjcmV0S2V5Rm9yRGV2TXVzdEJlQXRMZWFzdDMyQ2hhcnM=}
+      - MS_AUTH_URL=${MS_AUTH_URL:-http://localhost:8080}
+      - MS_CONGRESOS_URL=${MS_CONGRESOS_URL:-http://localhost:8080}
+      - MS_ACTIVIDADES_URL=${MS_ACTIVIDADES_URL:-http://localhost:8080}
+    depends_on:
+      db-ponencias:
+        condition: service_healthy
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    external: true
+
+volumes:
+  mysqldata_ponencias:
+    name: ms_ponencias_mysql_data

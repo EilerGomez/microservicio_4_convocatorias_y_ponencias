@@ -18,7 +18,7 @@ jwt:
   secret: ${JWT_SECRET:VGhpc0lzQVN1cGVyU2VjdXJlSldUU2VjcmV0S2V5Rm9yRGV2TXVzdEJlQXRMZWFzdDMyQ2hhcnM=}
 
 server:
-  port: 8084
+  port: ${SERVER_PORT:8085}
   error:
     include-message: always
     include-binding-errors: always
