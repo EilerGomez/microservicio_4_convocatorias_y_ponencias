@@ -15,20 +15,18 @@ import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEn
 import java.util.List;
 
 public interface PonenciaServicio {
-
-    PonenciaResponse enviar(PonenciaRequest request, Long idUsuario)
+ 
+    PonenciaResponse enviar(PonenciaRequest request, Long idUsuario, String urlArchivo)
             throws RecursoNoEncontradoException;
-
-    PonenciaResponse obtenerPorId(Long id)
-            throws RecursoNoEncontradoException;
-
+ 
+    PonenciaResponse obtenerPorId(Long id) throws RecursoNoEncontradoException;
+ 
     List<PonenciaResponse> listarPorConvocatoria(Long idConvocatoria);
-
+ 
     List<PonenciaResponse> listarMisPonencias(Long idUsuario);
-
-    PonenciaResponse reenviar(Long idPonencia, PonenciaRequest request, Long idUsuario)
+ 
+    PonenciaResponse reenviar(Long id, PonenciaRequest request, Long idUsuario, String urlArchivo)
             throws RecursoNoEncontradoException;
-    
+ 
     List<PonenciaResponse> listarAprobadasPorCongreso(Long idCongreso);
-
 }

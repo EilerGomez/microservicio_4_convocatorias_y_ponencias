@@ -4,34 +4,32 @@
  */
 package com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias;
 
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.Builder;
+ 
 /**
  *
  * @author eiler
  */
 
 
-import jakarta.validation.constraints.*;
-import lombok.*;
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class PonenciaRequest {
+public record PonenciaRequest(
+ 
+        @NotNull(message = "El id de convocatoria es obligatorio")
+        @Positive
+        Long idConvocatoria,
+ 
+        @NotNull(message = "El id de tipo actividad es obligatorio")
+        @Positive
+        Integer idTipoActividad,
+ 
+        @NotNull(message = "El título es obligatorio")
+        String tituloPonencia,
+ 
+        String resumen
+ 
+) {}
 
-    @NotNull(message = "El id de la convocatoria es obligatorio")
-    private Long idConvocatoria;
-
-    @NotNull(message = "El tipo de actividad es obligatorio")
-    private Integer idTipoActividad;
-
-    @NotBlank(message = "El título de la ponencia es obligatorio")
-    @Size(max = 255, message = "El título no puede superar 255 caracteres")
-    private String tituloPonencia;
-
-    @NotBlank(message = "El resumen es obligatorio")
-    private String resumen;
-
-    private String urlArchivo;
-}

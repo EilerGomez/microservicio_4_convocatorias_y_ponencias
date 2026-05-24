@@ -1,13 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias;
 
-/**
- *
- * @author eiler
- */
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaRequest;
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
@@ -41,14 +33,16 @@ public class PonenciaServicioImpl implements PonenciaServicio {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public PonenciaResponse enviar(PonenciaRequest request, Long idUsuario)
+    public PonenciaResponse enviar(PonenciaRequest request,
+                                   Long idUsuario,
+                                   String urlArchivo)          // <-- nuevo parámetro
             throws RecursoNoEncontradoException {
 
-        Convocatoria convocatoria = obtenerConvocatoriaAbierta(request.getIdConvocatoria());
+        Convocatoria convocatoria = obtenerConvocatoriaAbierta(request.idConvocatoria());
 
         boolean tieneActiva = ponenciaRepositorio
                 .findByConvocatoriaIdConvocatoriaAndIdUsuario(
-                        request.getIdConvocatoria(), idUsuario)
+                        request.idConvocatoria(), idUsuario)
                 .stream()
                 .anyMatch(p -> !p.getEstado().getIdEstado()
                         .equals(EstadoPonenciaEnum.RECHAZADO.getId()));
@@ -64,11 +58,11 @@ public class PonenciaServicioImpl implements PonenciaServicio {
         Ponencia ponencia = Ponencia.builder()
                 .convocatoria(convocatoria)
                 .idUsuario(idUsuario)
-                .idTipoActividad(request.getIdTipoActividad())
+                .idTipoActividad(request.idTipoActividad())
                 .estado(estadoPendiente)
-                .tituloPonencia(request.getTituloPonencia())
-                .resumen(request.getResumen())
-                .urlArchivo(request.getUrlArchivo())
+                .tituloPonencia(request.tituloPonencia())
+                .resumen(request.resumen())
+                .urlArchivo(urlArchivo)                        // <-- viene del controlador
                 .build();
 
         return new PonenciaResponse(ponenciaRepositorio.save(ponencia));
@@ -105,7 +99,8 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     @Transactional(rollbackFor = Exception.class)
     public PonenciaResponse reenviar(Long idPonencia,
                                      PonenciaRequest request,
-                                     Long idUsuario)
+                                     Long idUsuario,
+                                     String urlArchivo)        // <-- nuevo parámetro
             throws RecursoNoEncontradoException {
 
         Ponencia ponencia = obtenerPonencia(idPonencia);
@@ -125,11 +120,16 @@ public class PonenciaServicioImpl implements PonenciaServicio {
 
         EstadoPonencia estadoPendiente = obtenerEstado(EstadoPonenciaEnum.PENDIENTE);
 
-        ponencia.setTituloPonencia(request.getTituloPonencia());
-        ponencia.setResumen(request.getResumen());
-        ponencia.setUrlArchivo(request.getUrlArchivo());
-        ponencia.setIdTipoActividad(request.getIdTipoActividad());
+        ponencia.setTituloPonencia(request.tituloPonencia());
+        ponencia.setResumen(request.resumen());
+        ponencia.setIdTipoActividad(request.idTipoActividad());
         ponencia.setEstado(estadoPendiente);
+
+        // Solo sobreescribir la URL si el usuario subió un nuevo archivo;
+        // si no subió nada, se conserva el PDF anterior
+        if (urlArchivo != null && !urlArchivo.isBlank()) {
+            ponencia.setUrlArchivo(urlArchivo);
+        }
 
         return new PonenciaResponse(ponenciaRepositorio.save(ponencia));
     }
@@ -145,6 +145,8 @@ public class PonenciaServicioImpl implements PonenciaServicio {
                 .map(PonenciaResponse::new)
                 .collect(Collectors.toList());
     }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
 
     private Ponencia obtenerPonencia(Long id) throws RecursoNoEncontradoException {
         return ponenciaRepositorio.findById(id)

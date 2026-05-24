@@ -1,24 +1,18 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.eiler.microservicio_4_convocatorias_ponencias.controladores.ponencias;
-
-/**
- *
- * @author eiler
- */
 
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaRequest;
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias.PonenciaServicio;
+import com.eiler.microservicio_4_convocatorias_ponencias.storage.FileStorageService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -27,9 +21,12 @@ import java.util.List;
 public class PonenciaControlador {
 
     private final PonenciaServicio servicio;
+    private final FileStorageService fileStorageService;
 
-    public PonenciaControlador(PonenciaServicio servicio) {
+    public PonenciaControlador(PonenciaServicio servicio,
+                                FileStorageService fileStorageService) {
         this.servicio = servicio;
+        this.fileStorageService = fileStorageService;
     }
 
     private Long resolverIdUsuario() {
@@ -38,12 +35,20 @@ public class PonenciaControlador {
         return Long.parseLong(principal);
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PonenciaResponse> enviar(
-            @Valid @RequestBody PonenciaRequest request)
+            @Valid @ModelAttribute PonenciaRequest request,
+            @RequestPart(value = "archivo", required = false) MultipartFile archivo)
             throws RecursoNoEncontradoException {
+
+        // Subir el archivo y obtener su URL pública
+        String urlArchivo = null;
+        if (archivo != null && !archivo.isEmpty()) {
+            urlArchivo = fileStorageService.store(archivo);
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(servicio.enviar(request, resolverIdUsuario()));
+                .body(servicio.enviar(request, resolverIdUsuario(), urlArchivo));
     }
 
     @GetMapping("/{id}")
@@ -64,13 +69,21 @@ public class PonenciaControlador {
         return ResponseEntity.ok(servicio.listarMisPonencias(resolverIdUsuario()));
     }
 
-    @PutMapping("/{id}/reenviar")
+    @PutMapping(value = "/{id}/reenviar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PonenciaResponse> reenviar(
             @PathVariable Long id,
-            @Valid @RequestBody PonenciaRequest request)
+            @Valid @ModelAttribute PonenciaRequest request,
+            @RequestPart(value = "archivo", required = false) MultipartFile archivo)
             throws RecursoNoEncontradoException {
-        return ResponseEntity.ok(servicio.reenviar(id, request, resolverIdUsuario()));
+
+        String urlArchivo = null;
+        if (archivo != null && !archivo.isEmpty()) {
+            urlArchivo = fileStorageService.store(archivo);
+        }
+
+        return ResponseEntity.ok(servicio.reenviar(id, request, resolverIdUsuario(), urlArchivo));
     }
+
     @GetMapping("/congreso/{idCongreso}/aprobadas")
     @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<PonenciaResponse>> listarAprobadasPorCongreso(
