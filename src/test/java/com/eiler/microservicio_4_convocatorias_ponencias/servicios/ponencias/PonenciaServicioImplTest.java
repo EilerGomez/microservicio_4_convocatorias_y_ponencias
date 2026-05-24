@@ -75,12 +75,11 @@ class PonenciaServicioImplTest {
                 .nombreEstado("RECHAZADO")
                 .build();
 
-        requestValido = PonenciaRequest.builder()
-                .idConvocatoria(1L)
-                .idTipoActividad(1)
-                .tituloPonencia("Mi ponencia")
-                .resumen("Resumen detallado")
-                .build();
+        requestValido = new PonenciaRequest();
+        requestValido.setIdConvocatoria(1L);
+        requestValido.setIdTipoActividad(1);
+        requestValido.setTituloPonencia("Mi ponencia");
+        requestValido.setResumen("Resumen detallado");
 
         ponPendiente = Ponencia.builder()
                 .idPonencia(1L)

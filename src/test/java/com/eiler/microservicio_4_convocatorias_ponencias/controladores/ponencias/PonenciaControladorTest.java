@@ -50,12 +50,11 @@ class PonenciaControladorTest {
                 )
         );
 
-        req = new PonenciaRequest(
-                1L,
-                1,
-                "Mi ponencia",
-                "Resumen"
-        );
+        req = new PonenciaRequest();
+        req.setIdConvocatoria(1L);
+        req.setIdTipoActividad(1);
+        req.setTituloPonencia("Mi ponencia");
+        req.setResumen("Resumen");
 
         resPendiente = PonenciaResponse.builder()
                 .idPonencia(1L)
