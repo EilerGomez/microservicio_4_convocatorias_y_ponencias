@@ -1,34 +1,39 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias;
+
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.Builder;
+ 
+/**
+ *
+ * @author eiler
+ */
 
 
-public class PonenciaRequest {
+@Builder
+public record PonenciaRequest(
+ 
+        @NotNull(message = "El id de convocatoria es obligatorio")
+        @Positive
+        Long idConvocatoria,
+ 
+        @NotNull(message = "El id de tipo actividad es obligatorio")
+        @Positive
+        Integer idTipoActividad,
+ 
+        @NotBlank(message = "El título es obligatorio")
+        String tituloPonencia,
+ 
+        String resumen,
+ 
+        // URL del archivo ya subido al microservicio de auth (8081)
+        String urlArchivo
+) {}
 
-    @NotNull(message = "El id de convocatoria es obligatorio")
-    @Positive
-    private Long idConvocatoria;
 
-    @NotNull(message = "El id de tipo actividad es obligatorio")
-    @Positive
-    private Integer idTipoActividad;
-
-    @NotBlank(message = "El título es obligatorio")
-    private String tituloPonencia;
-
-    private String resumen;
-
-    public PonenciaRequest() {}
-
-    public Long idConvocatoria()    { return idConvocatoria; }
-    public Integer idTipoActividad() { return idTipoActividad; }
-    public String tituloPonencia()  { return tituloPonencia; }
-    public String resumen()         { return resumen; }
-
-    public void setIdConvocatoria(Long idConvocatoria)      { this.idConvocatoria = idConvocatoria; }
-    public void setIdTipoActividad(Integer idTipoActividad) { this.idTipoActividad = idTipoActividad; }
-    public void setTituloPonencia(String tituloPonencia)    { this.tituloPonencia = tituloPonencia; }
-    public void setResumen(String resumen)                  { this.resumen = resumen; }
-}

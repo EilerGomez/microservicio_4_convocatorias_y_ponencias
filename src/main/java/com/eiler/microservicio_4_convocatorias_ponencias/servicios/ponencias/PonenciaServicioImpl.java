@@ -35,14 +35,13 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     @Transactional(rollbackFor = Exception.class)
     public PonenciaResponse enviar(PonenciaRequest request,
                                    Long idUsuario,
-                                   String urlArchivo)          // <-- nuevo parámetro
+                                   String urlArchivo)
             throws RecursoNoEncontradoException {
 
         Convocatoria convocatoria = obtenerConvocatoriaAbierta(request.idConvocatoria());
 
         boolean tieneActiva = ponenciaRepositorio
-                .findByConvocatoriaIdConvocatoriaAndIdUsuario(
-                        request.idConvocatoria(), idUsuario)
+                .findByConvocatoriaIdConvocatoriaAndIdUsuario(request.idConvocatoria(), idUsuario)
                 .stream()
                 .anyMatch(p -> !p.getEstado().getIdEstado()
                         .equals(EstadoPonenciaEnum.RECHAZADO.getId()));
@@ -62,7 +61,7 @@ public class PonenciaServicioImpl implements PonenciaServicio {
                 .estado(estadoPendiente)
                 .tituloPonencia(request.tituloPonencia())
                 .resumen(request.resumen())
-                .urlArchivo(urlArchivo)                        // <-- viene del controlador
+                .urlArchivo(urlArchivo)
                 .build();
 
         return new PonenciaResponse(ponenciaRepositorio.save(ponencia));
@@ -81,18 +80,14 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     @Transactional(readOnly = true)
     public List<PonenciaResponse> listarPorConvocatoria(Long idConvocatoria) {
         return ponenciaRepositorio.findByConvocatoriaIdConvocatoria(idConvocatoria)
-                .stream()
-                .map(PonenciaResponse::new)
-                .collect(Collectors.toList());
+                .stream().map(PonenciaResponse::new).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PonenciaResponse> listarMisPonencias(Long idUsuario) {
         return ponenciaRepositorio.findByIdUsuario(idUsuario)
-                .stream()
-                .map(PonenciaResponse::new)
-                .collect(Collectors.toList());
+                .stream().map(PonenciaResponse::new).collect(Collectors.toList());
     }
 
     @Override
@@ -100,36 +95,26 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     public PonenciaResponse reenviar(Long idPonencia,
                                      PonenciaRequest request,
                                      Long idUsuario,
-                                     String urlArchivo)        // <-- nuevo parámetro
+                                     String urlArchivo)
             throws RecursoNoEncontradoException {
 
         Ponencia ponencia = obtenerPonencia(idPonencia);
 
-        if (!ponencia.getIdUsuario().equals(idUsuario)) {
-            throw new IllegalStateException(
-                    "No puedes modificar una ponencia que no es tuya");
-        }
+        if (!ponencia.getIdUsuario().equals(idUsuario))
+            throw new IllegalStateException("No puedes modificar una ponencia que no es tuya");
 
-        if (!ponencia.getEstado().getIdEstado()
-                .equals(EstadoPonenciaEnum.RECHAZADO.getId())) {
-            throw new IllegalStateException(
-                    "Solo puedes reenviar una ponencia que fue rechazada");
-        }
+        if (!ponencia.getEstado().getIdEstado().equals(EstadoPonenciaEnum.RECHAZADO.getId()))
+            throw new IllegalStateException("Solo puedes reenviar una ponencia que fue rechazada");
 
         obtenerConvocatoriaAbierta(ponencia.getConvocatoria().getIdConvocatoria());
-
-        EstadoPonencia estadoPendiente = obtenerEstado(EstadoPonenciaEnum.PENDIENTE);
 
         ponencia.setTituloPonencia(request.tituloPonencia());
         ponencia.setResumen(request.resumen());
         ponencia.setIdTipoActividad(request.idTipoActividad());
-        ponencia.setEstado(estadoPendiente);
+        ponencia.setEstado(obtenerEstado(EstadoPonenciaEnum.PENDIENTE));
 
-        // Solo sobreescribir la URL si el usuario subió un nuevo archivo;
-        // si no subió nada, se conserva el PDF anterior
-        if (urlArchivo != null && !urlArchivo.isBlank()) {
+        if (urlArchivo != null && !urlArchivo.isBlank())
             ponencia.setUrlArchivo(urlArchivo);
-        }
 
         return new PonenciaResponse(ponenciaRepositorio.save(ponencia));
     }
@@ -138,20 +123,14 @@ public class PonenciaServicioImpl implements PonenciaServicio {
     @Transactional(readOnly = true)
     public List<PonenciaResponse> listarAprobadasPorCongreso(Long idCongreso) {
         EstadoPonencia estadoAprobado = obtenerEstado(EstadoPonenciaEnum.APROBADO);
-
         return ponenciaRepositorio
                 .findByConvocatoria_IdCongresoAndEstado(idCongreso, estadoAprobado)
-                .stream()
-                .map(PonenciaResponse::new)
-                .collect(Collectors.toList());
+                .stream().map(PonenciaResponse::new).collect(Collectors.toList());
     }
-
-    // ── helpers ──────────────────────────────────────────────────────────────
 
     private Ponencia obtenerPonencia(Long id) throws RecursoNoEncontradoException {
         return ponenciaRepositorio.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
-                        "Ponencia con ID " + id + " no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Ponencia con ID " + id + " no encontrada"));
     }
 
     private Convocatoria obtenerConvocatoriaAbierta(Long idConvocatoria)
@@ -159,10 +138,8 @@ public class PonenciaServicioImpl implements PonenciaServicio {
         Convocatoria conv = convocatoriaRepositorio.findById(idConvocatoria)
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Convocatoria con ID " + idConvocatoria + " no encontrada"));
-        if (!conv.getEstaAbierta()) {
-            throw new IllegalStateException(
-                    "La convocatoria con ID " + idConvocatoria + " está cerrada");
-        }
+        if (!conv.getEstaAbierta())
+            throw new IllegalStateException("La convocatoria con ID " + idConvocatoria + " está cerrada");
         return conv;
     }
 

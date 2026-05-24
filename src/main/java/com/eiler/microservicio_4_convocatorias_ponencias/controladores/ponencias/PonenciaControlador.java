@@ -4,15 +4,12 @@ import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.Ponencia
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias.PonenciaServicio;
-import com.eiler.microservicio_4_convocatorias_ponencias.storage.FileStorageService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,12 +18,9 @@ import java.util.List;
 public class PonenciaControlador {
 
     private final PonenciaServicio servicio;
-    private final FileStorageService fileStorageService;
 
-    public PonenciaControlador(PonenciaServicio servicio,
-                                FileStorageService fileStorageService) {
+    public PonenciaControlador(PonenciaServicio servicio) {
         this.servicio = servicio;
-        this.fileStorageService = fileStorageService;
     }
 
     private Long resolverIdUsuario() {
@@ -35,20 +29,16 @@ public class PonenciaControlador {
         return Long.parseLong(principal);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /**
+     * Recibe JSON normal — la URL del archivo ya viene lista
+     * porque el frontend la subió primero al auth (8081).
+     */
+    @PostMapping
     public ResponseEntity<PonenciaResponse> enviar(
-            @Valid @ModelAttribute PonenciaRequest request,
-            @RequestPart(value = "archivo", required = false) MultipartFile archivo)
+            @Valid @RequestBody PonenciaRequest request)
             throws RecursoNoEncontradoException {
-
-        // Subir el archivo y obtener su URL pública
-        String urlArchivo = null;
-        if (archivo != null && !archivo.isEmpty()) {
-            urlArchivo = fileStorageService.store(archivo);
-        }
-
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(servicio.enviar(request, resolverIdUsuario(), urlArchivo));
+                .body(servicio.enviar(request, resolverIdUsuario(), request.urlArchivo()));
     }
 
     @GetMapping("/{id}")
@@ -69,19 +59,13 @@ public class PonenciaControlador {
         return ResponseEntity.ok(servicio.listarMisPonencias(resolverIdUsuario()));
     }
 
-    @PutMapping(value = "/{id}/reenviar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping("/{id}/reenviar")
     public ResponseEntity<PonenciaResponse> reenviar(
             @PathVariable Long id,
-            @Valid @ModelAttribute PonenciaRequest request,
-            @RequestPart(value = "archivo", required = false) MultipartFile archivo)
+            @Valid @RequestBody PonenciaRequest request)
             throws RecursoNoEncontradoException {
-
-        String urlArchivo = null;
-        if (archivo != null && !archivo.isEmpty()) {
-            urlArchivo = fileStorageService.store(archivo);
-        }
-
-        return ResponseEntity.ok(servicio.reenviar(id, request, resolverIdUsuario(), urlArchivo));
+        return ResponseEntity.ok(
+                servicio.reenviar(id, request, resolverIdUsuario(), request.urlArchivo()));
     }
 
     @GetMapping("/congreso/{idCongreso}/aprobadas")

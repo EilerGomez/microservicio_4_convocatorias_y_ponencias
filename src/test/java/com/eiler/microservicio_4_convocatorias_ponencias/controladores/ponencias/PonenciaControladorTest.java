@@ -4,7 +4,6 @@ import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.Ponencia
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.ponencias.PonenciaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
 import com.eiler.microservicio_4_convocatorias_ponencias.servicios.ponencias.PonenciaServicio;
-import com.eiler.microservicio_4_convocatorias_ponencias.storage.FileStorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,9 +28,6 @@ class PonenciaControladorTest {
 
     @Mock
     private PonenciaServicio servicio;
-
-    @Mock
-    private FileStorageService fileStorageService;
 
     @InjectMocks
     private PonenciaControlador controlador;
@@ -50,11 +45,13 @@ class PonenciaControladorTest {
                 )
         );
 
-        req = new PonenciaRequest();
-        req.setIdConvocatoria(1L);
-        req.setIdTipoActividad(1);
-        req.setTituloPonencia("Mi ponencia");
-        req.setResumen("Resumen");
+        req = PonenciaRequest.builder()
+                .idConvocatoria(1L)
+                .idTipoActividad(1)
+                .tituloPonencia("Mi ponencia")
+                .resumen("Resumen")
+                .urlArchivo("http://localhost:8081/api/v1/files/ponencia.pdf")
+                .build();
 
         resPendiente = PonenciaResponse.builder()
                 .idPonencia(1L)
@@ -71,64 +68,73 @@ class PonenciaControladorTest {
     }
 
     @Test
-    void enviarRetorna201SinArchivo() throws RecursoNoEncontradoException {
-        when(servicio.enviar(any(PonenciaRequest.class), eq(42L), isNull()))
-                .thenReturn(resPendiente);
+    void enviarRetorna201() throws RecursoNoEncontradoException {
+        when(servicio.enviar(
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        )).thenReturn(resPendiente);
 
-        ResponseEntity<PonenciaResponse> r = controlador.enviar(req, null);
+        ResponseEntity<PonenciaResponse> r = controlador.enviar(req);
 
         assertEquals(HttpStatus.CREATED, r.getStatusCode());
         assertNotNull(r.getBody());
         assertEquals("PENDIENTE", r.getBody().getNombreEstado());
 
-        verify(servicio).enviar(any(PonenciaRequest.class), eq(42L), isNull());
-        verifyNoInteractions(fileStorageService);
+        verify(servicio).enviar(
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        );
     }
 
     @Test
-    void enviarRetorna201ConArchivo() throws RecursoNoEncontradoException {
-        MockMultipartFile archivo = new MockMultipartFile(
-                "archivo",
-                "ponencia.pdf",
-                "application/pdf",
-                "contenido".getBytes()
-        );
-
-        when(fileStorageService.store(archivo))
-                .thenReturn("http://localhost/uploads/ponencia.pdf");
+    void enviarSinUrlArchivoRetorna201() throws RecursoNoEncontradoException {
+        PonenciaRequest requestSinArchivo = PonenciaRequest.builder()
+                .idConvocatoria(1L)
+                .idTipoActividad(1)
+                .tituloPonencia("Mi ponencia")
+                .resumen("Resumen")
+                .urlArchivo(null)
+                .build();
 
         when(servicio.enviar(
                 any(PonenciaRequest.class),
                 eq(42L),
-                eq("http://localhost/uploads/ponencia.pdf")
+                isNull()
         )).thenReturn(resPendiente);
 
-        ResponseEntity<PonenciaResponse> r = controlador.enviar(req, archivo);
+        ResponseEntity<PonenciaResponse> r = controlador.enviar(requestSinArchivo);
 
         assertEquals(HttpStatus.CREATED, r.getStatusCode());
         assertNotNull(r.getBody());
         assertEquals("PENDIENTE", r.getBody().getNombreEstado());
 
-        verify(fileStorageService).store(archivo);
         verify(servicio).enviar(
                 any(PonenciaRequest.class),
                 eq(42L),
-                eq("http://localhost/uploads/ponencia.pdf")
+                isNull()
         );
     }
 
     @Test
-    void enviarConvCerradaPropagaExcepcion() throws RecursoNoEncontradoException {
-        when(servicio.enviar(any(PonenciaRequest.class), eq(42L), isNull()))
-                .thenThrow(new IllegalStateException("cerrada"));
+    void enviarConvocatoriaCerradaPropagaExcepcion() throws RecursoNoEncontradoException {
+        when(servicio.enviar(
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        )).thenThrow(new IllegalStateException("cerrada"));
 
         assertThrows(
                 IllegalStateException.class,
-                () -> controlador.enviar(req, null)
+                () -> controlador.enviar(req)
         );
 
-        verify(servicio).enviar(any(PonenciaRequest.class), eq(42L), isNull());
-        verifyNoInteractions(fileStorageService);
+        verify(servicio).enviar(
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        );
     }
 
     @Test
@@ -140,6 +146,8 @@ class PonenciaControladorTest {
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertNotNull(r.getBody());
         assertEquals(1L, r.getBody().getIdPonencia());
+
+        verify(servicio).obtenerPorId(1L);
     }
 
     @Test
@@ -151,6 +159,8 @@ class PonenciaControladorTest {
                 RecursoNoEncontradoException.class,
                 () -> controlador.obtenerPorId(99L)
         );
+
+        verify(servicio).obtenerPorId(99L);
     }
 
     @Test
@@ -164,6 +174,8 @@ class PonenciaControladorTest {
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertNotNull(r.getBody());
         assertEquals(1, r.getBody().size());
+
+        verify(servicio).listarPorConvocatoria(1L);
     }
 
     @Test
@@ -177,6 +189,8 @@ class PonenciaControladorTest {
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertNotNull(r.getBody());
         assertTrue(r.getBody().isEmpty());
+
+        verify(servicio).listarPorConvocatoria(99L);
     }
 
     @Test
@@ -190,83 +204,106 @@ class PonenciaControladorTest {
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertNotNull(r.getBody());
         assertEquals(42L, r.getBody().get(0).getIdUsuario());
+
+        verify(servicio).listarMisPonencias(42L);
     }
 
     @Test
-    void reenviarExitosoRetorna200SinArchivo() throws RecursoNoEncontradoException {
-        when(servicio.reenviar(eq(2L), any(PonenciaRequest.class), eq(42L), isNull()))
-                .thenReturn(resPendiente);
+    void reenviarExitosoRetorna200() throws RecursoNoEncontradoException {
+        when(servicio.reenviar(
+                eq(2L),
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        )).thenReturn(resPendiente);
 
         ResponseEntity<PonenciaResponse> r =
-                controlador.reenviar(2L, req, null);
+                controlador.reenviar(2L, req);
 
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertNotNull(r.getBody());
 
-        verify(servicio).reenviar(eq(2L), any(PonenciaRequest.class), eq(42L), isNull());
-        verifyNoInteractions(fileStorageService);
+        verify(servicio).reenviar(
+                eq(2L),
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        );
     }
 
     @Test
-    void reenviarExitosoRetorna200ConArchivo() throws RecursoNoEncontradoException {
-        MockMultipartFile archivo = new MockMultipartFile(
-                "archivo",
-                "correccion.pdf",
-                "application/pdf",
-                "contenido corregido".getBytes()
-        );
-
-        when(fileStorageService.store(archivo))
-                .thenReturn("http://localhost/uploads/correccion.pdf");
+    void reenviarSinUrlArchivoRetorna200() throws RecursoNoEncontradoException {
+        PonenciaRequest requestSinArchivo = PonenciaRequest.builder()
+                .idConvocatoria(1L)
+                .idTipoActividad(1)
+                .tituloPonencia("Mi ponencia corregida")
+                .resumen("Resumen corregido")
+                .urlArchivo(null)
+                .build();
 
         when(servicio.reenviar(
                 eq(2L),
                 any(PonenciaRequest.class),
                 eq(42L),
-                eq("http://localhost/uploads/correccion.pdf")
+                isNull()
         )).thenReturn(resPendiente);
 
         ResponseEntity<PonenciaResponse> r =
-                controlador.reenviar(2L, req, archivo);
+                controlador.reenviar(2L, requestSinArchivo);
 
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertNotNull(r.getBody());
 
-        verify(fileStorageService).store(archivo);
         verify(servicio).reenviar(
                 eq(2L),
                 any(PonenciaRequest.class),
                 eq(42L),
-                eq("http://localhost/uploads/correccion.pdf")
+                isNull()
         );
     }
 
     @Test
     void reenviarNoRechazadaPropagaExcepcion() throws RecursoNoEncontradoException {
-        when(servicio.reenviar(eq(1L), any(PonenciaRequest.class), eq(42L), isNull()))
-                .thenThrow(new IllegalStateException("rechazada"));
+        when(servicio.reenviar(
+                eq(1L),
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        )).thenThrow(new IllegalStateException("rechazada"));
 
         assertThrows(
                 IllegalStateException.class,
-                () -> controlador.reenviar(1L, req, null)
+                () -> controlador.reenviar(1L, req)
         );
 
-        verify(servicio).reenviar(eq(1L), any(PonenciaRequest.class), eq(42L), isNull());
-        verifyNoInteractions(fileStorageService);
+        verify(servicio).reenviar(
+                eq(1L),
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        );
     }
 
     @Test
     void reenviarNoExisteLanzaExcepcion() throws RecursoNoEncontradoException {
-        when(servicio.reenviar(eq(99L), any(PonenciaRequest.class), eq(42L), isNull()))
-                .thenThrow(new RecursoNoEncontradoException("99"));
+        when(servicio.reenviar(
+                eq(99L),
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        )).thenThrow(new RecursoNoEncontradoException("99"));
 
         assertThrows(
                 RecursoNoEncontradoException.class,
-                () -> controlador.reenviar(99L, req, null)
+                () -> controlador.reenviar(99L, req)
         );
 
-        verify(servicio).reenviar(eq(99L), any(PonenciaRequest.class), eq(42L), isNull());
-        verifyNoInteractions(fileStorageService);
+        verify(servicio).reenviar(
+                eq(99L),
+                any(PonenciaRequest.class),
+                eq(42L),
+                eq("http://localhost:8081/api/v1/files/ponencia.pdf")
+        );
     }
 
     @Test
@@ -288,6 +325,8 @@ class PonenciaControladorTest {
         assertNotNull(r.getBody());
         assertEquals(1, r.getBody().size());
         assertEquals("APROBADO", r.getBody().get(0).getNombreEstado());
+
+        verify(servicio).listarAprobadasPorCongreso(10L);
     }
 
     @Test
@@ -301,5 +340,7 @@ class PonenciaControladorTest {
         assertEquals(HttpStatus.OK, r.getStatusCode());
         assertNotNull(r.getBody());
         assertTrue(r.getBody().isEmpty());
+
+        verify(servicio).listarAprobadasPorCongreso(99L);
     }
 }
