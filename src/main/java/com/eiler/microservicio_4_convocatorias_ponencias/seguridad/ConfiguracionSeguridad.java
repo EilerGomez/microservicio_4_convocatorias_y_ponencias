@@ -42,9 +42,12 @@ public class ConfiguracionSeguridad {
             .authorizeHttpRequests(auth -> auth
                 // Swagger libre
                 .requestMatchers(
+                    "/swagger-ui",
                     "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/swagger-ui.html"
+                    "/v1/api-docs",
+                    "/v1/api-docs/**",
+                    "/swagger-ui.html",
+                    "/webjars/**"
                 ).permitAll()
                 
                 .anyRequest().authenticated()
