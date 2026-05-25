@@ -13,24 +13,58 @@ import com.eiler.microservicio_4_convocatorias_ponencias.dtos.convocatoria.Convo
 import com.eiler.microservicio_4_convocatorias_ponencias.dtos.convocatoria.ConvocatoriaResponse;
 import com.eiler.microservicio_4_convocatorias_ponencias.excepciones.RecursoNoEncontradoException;
 import com.eiler.microservicio_4_convocatorias_ponencias.modelos.convocatoria.Convocatoria;
+// import org.springframework.web.client.RestTemplate;
+
 import com.eiler.microservicio_4_convocatorias_ponencias.repositorios.convocatoria.ConvocatoriaRepositorio;
 import org.springframework.stereotype.Service;
+// import org.springframework.beans.factory.annotation.Value;
+// import org.springframework.http.HttpEntity;
+// import org.springframework.http.HttpHeaders;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
+// import org.springframework.http.HttpMethod;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.security.core.context.SecurityContextHolder;
+ 
 
 @Service
 public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
 
     private final ConvocatoriaRepositorio repositorio;
+    
+    
+    // @Value("${gateway.base-url}")
+    // private String gatewayBaseUrl;
+
+    // private final RestTemplate restTemplate;
+ 
+
 
     public ConvocatoriaServicioImpl(ConvocatoriaRepositorio repositorio) {
         this.repositorio = repositorio;
     }
+    
+    // private HttpEntity<Void> requestConJwt() {
+    //     String token = (String) SecurityContextHolder.getContext()
+    //                         .getAuthentication().getCredentials();
+    //     HttpHeaders headers = new HttpHeaders();
+    //     headers.setBearerAuth(token);
+    //     return new HttpEntity<>(headers);
+    // }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ConvocatoriaResponse crear(ConvocatoriaRequest request) {
+        
+        // String url = gatewayBaseUrl + "/api/v1/conferences/" + request.getIdCongreso();
+        // ResponseEntity<Object> congResp = restTemplate.exchange(
+        //     url, HttpMethod.GET, requestConJwt(), Object.class);
+        // if (!congResp.getStatusCode().is2xxSuccessful()) {
+        //     throw new IllegalStateException(
+        //         "El congreso con ID " + request.getIdCongreso() + " no existe o no está activo");
+        // }
+
 
         validarFechas(request.getFechaApertura(), request.getFechaCierre());
 
@@ -58,6 +92,14 @@ public class ConvocatoriaServicioImpl implements ConvocatoriaServicio {
     @Override
     @Transactional(readOnly = true)
     public List<ConvocatoriaResponse> listarPorCongreso(Long idCongreso) {
+        // String url = gatewayBaseUrl + "/api/v1/conferences/" + idCongreso;
+        // ResponseEntity<Object> congResp = restTemplate.exchange(
+        //     url, HttpMethod.GET, requestConJwt(), Object.class);
+        // if (!congResp.getStatusCode().is2xxSuccessful()) {
+        //     throw new RecursoNoEncontradoException(
+        //         "Congreso con ID " + idCongreso + " no encontrado");
+        // }
+
         return repositorio.findByIdCongreso(idCongreso)
                 .stream()
                 .map(ConvocatoriaResponse::new)

@@ -15,9 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+// import org.springframework.beans.factory.annotation.Value;
+// import org.springframework.http.HttpEntity;
+// import org.springframework.http.HttpHeaders;
+// import org.springframework.http.HttpMethod;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.security.core.context.SecurityContextHolder;
+// import org.springframework.web.client.RestTemplate;
+ 
 @Service
 public class PonenciaServicioImpl implements PonenciaServicio {
+    // @Value("${gateway.base-url}")
+    // private String gatewayBaseUrl;
+    // private final RestTemplate restTemplate;
 
     private final PonenciaRepositorio       ponenciaRepositorio;
     private final ConvocatoriaRepositorio   convocatoriaRepositorio;
@@ -30,6 +40,16 @@ public class PonenciaServicioImpl implements PonenciaServicio {
         this.convocatoriaRepositorio = convocatoriaRepositorio;
         this.estadoRepositorio       = estadoRepositorio;
     }
+    //
+    // private HttpEntity<Void> requestConJwt() {
+    //     String token = (String) SecurityContextHolder.getContext()
+    //                         .getAuthentication().getCredentials();
+    //     HttpHeaders headers = new HttpHeaders();
+    //     headers.setBearerAuth(token);
+    //     return new HttpEntity<>(headers);
+    // }
+ 
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -37,6 +57,21 @@ public class PonenciaServicioImpl implements PonenciaServicio {
                                    Long idUsuario,
                                    String urlArchivo)
             throws RecursoNoEncontradoException {
+        
+        /*String url = gatewayBaseUrl + "/api/v1/users/" + idUsuario;
+        ResponseEntity<Object> userResp = restTemplate.exchange(
+            url, HttpMethod.GET, requestConJwt(), Object.class);
+        if (!userResp.getStatusCode().is2xxSuccessful()) {
+            throw new RecursoNoEncontradoException("Usuario con ID " + idUsuario + " no encontrado");
+        }
+ 
+        Convocatoria conv = convocatoriaRepositorio.findById(request.idConvocatoria()).orElseThrow(...);
+        String urlCongreso = gatewayBaseUrl + "/api/v1/conferences/" + conv.getIdCongreso();
+        ResponseEntity<Object> congResp = restTemplate.exchange(
+            urlCongreso, HttpMethod.GET, requestConJwt(), Object.class);
+        if (!congResp.getStatusCode().is2xxSuccessful()) {
+            throw new IllegalStateException("El congreso no está activo o no existe");
+        }*/
 
         Convocatoria convocatoria = obtenerConvocatoriaAbierta(request.idConvocatoria());
 
