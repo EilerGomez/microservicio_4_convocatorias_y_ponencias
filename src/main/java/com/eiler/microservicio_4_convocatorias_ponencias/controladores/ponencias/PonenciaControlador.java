@@ -29,10 +29,7 @@ public class PonenciaControlador {
         return Long.parseLong(principal);
     }
 
-    /**
-     * Recibe JSON normal — la URL del archivo ya viene lista
-     * porque el frontend la subió primero al auth (8081).
-     */
+  
     @PostMapping
     public ResponseEntity<PonenciaResponse> enviar(
             @Valid @RequestBody PonenciaRequest request)
@@ -48,7 +45,6 @@ public class PonenciaControlador {
     }
 
     @GetMapping("/convocatoria/{idConvocatoria}")
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<PonenciaResponse>> listarPorConvocatoria(
             @PathVariable Long idConvocatoria) {
         return ResponseEntity.ok(servicio.listarPorConvocatoria(idConvocatoria));
@@ -69,7 +65,6 @@ public class PonenciaControlador {
     }
 
     @GetMapping("/congreso/{idCongreso}/aprobadas")
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<PonenciaResponse>> listarAprobadasPorCongreso(
             @PathVariable Long idCongreso) {
         return ResponseEntity.ok(servicio.listarAprobadasPorCongreso(idCongreso));

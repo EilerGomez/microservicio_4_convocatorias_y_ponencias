@@ -38,7 +38,6 @@ public class EvaluacionPonenciaControlador {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<EvaluacionPonenciaResponse> evaluar(
             @Valid @RequestBody EvaluacionPonenciaRequest request)
             throws RecursoNoEncontradoException {
@@ -47,21 +46,18 @@ public class EvaluacionPonenciaControlador {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<EvaluacionPonenciaResponse> obtenerPorId(
             @PathVariable Long id) throws RecursoNoEncontradoException {
         return ResponseEntity.ok(servicio.obtenerPorId(id));
     }
 
     @GetMapping("/ponencia/{idPonencia}")
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<EvaluacionPonenciaResponse>> listarPorPonencia(
             @PathVariable Long idPonencia) {
         return ResponseEntity.ok(servicio.listarPorPonencia(idPonencia));
     }
 
     @GetMapping("/mis-evaluaciones")
-    @PreAuthorize("hasRole('ADMIN_CONGRESO') or hasRole('ADMIN_SISTEMA')")
     public ResponseEntity<List<EvaluacionPonenciaResponse>> listarMisEvaluaciones() {
         return ResponseEntity.ok(servicio.listarPorEvaluador(resolverIdUsuario()));
     }

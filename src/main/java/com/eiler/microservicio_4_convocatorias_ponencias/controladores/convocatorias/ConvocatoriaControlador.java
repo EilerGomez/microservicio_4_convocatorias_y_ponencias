@@ -68,7 +68,7 @@ public class ConvocatoriaControlador {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_SISTEMA')")
+    @PreAuthorize("hasRole('ADMIN_CONGRESO')")
     public ResponseEntity<Void> eliminar(
             @PathVariable Long id) throws RecursoNoEncontradoException {
         servicio.eliminar(id);
